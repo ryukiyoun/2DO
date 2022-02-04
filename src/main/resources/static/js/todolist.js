@@ -3,6 +3,7 @@
         items: [],
         server: {},
         onItemClick: function (element, event) {},
+        onFindTodoList: function(element, data) {},
     }
 
     function TodoList( element, options )
@@ -17,34 +18,33 @@
         load: function() {
             let instance = this;
 
-            instance.makeElement(instance);
+            this.makeElement(instance);
 
-            instance.findTodoList(new Date());
+            this.findTodoList(new Date());
 
             $(instance.element).on('click', '.list-group-item', function(event){
                 if(!$(this).hasClass('active')) {
                     let todoItemActive = $('.list-group-item.active');
                     todoItemActive.removeClass('active');
                     $(this).addClass('active');
-                }
 
-                //OPTION CALLBACK
-                if( typeof instance.options.onItemClick == 'function' ) {
-                    instance.options.onItemClick(instance.element, this);
+                    //OPTION CALLBACK
+                    if( typeof instance.options.onItemClick == 'function' ) {
+                        instance.options.onItemClick(instance.element, this);
+                    }
                 }
             });
 
             $(instance.element).on('keydown', '#todoInput', function(keyCode) {
                 if(keyCode.keyCode === 13 && $(this).val() !== ''){
                     ajaxPostRequest('/2do', JSON.stringify({
-                            todoDate: '2022-02-03',
+                            todoDate: $('#todoDateText').data('todoDate'),
                             contents:$(this).val(),
                             state:'NORMAL'
                         }),
                         function() {
-                            let el = $('#todoInput');
-                            el.val('');
-                            instance.findTodoList(new Date());
+                            $('#todoInput').val('');
+                            instance.findTodoList(new Date($('#todoDateText').data('todoDate')));
                         }, null);
                 }
             });
@@ -69,8 +69,7 @@
             $(instance.element).append(todoInput);
 
             let card = $('<div>', {
-                class: 'card mb-2 d-flex flex-column flex-1',
-                style: 'overflow-y:auto'
+                class: 'card mb-2 d-flex flex-column flex-1 overflow-auto'
             });
 
             let cardBody = $('<div>', {
@@ -78,7 +77,8 @@
             })
 
             let ulWrapper = $('<div/>', {
-                style: 'overflow-y:auto'
+                id:'todoListW',
+                class: 'overflow-auto'
             });
 
             let ul = $('<ul/>', {
@@ -86,9 +86,21 @@
                 class: 'list-group list-group-flush list-group-item-action'
             });
 
+            let emptyWrapper = $('<div/>', {
+                id:'emptyW',
+                class: 'flex-1 align-items-center justify-content-center d-none'
+            });
+
+            let emptyImg = $('<img/>', {
+                src:'/static/img/empty_todo.png'
+            });
+
+            emptyWrapper.append(emptyImg);
+
             ulWrapper.append(ul);
 
             cardBody.append(ulWrapper);
+            cardBody.append(emptyWrapper);
 
             card.append(cardBody);
 
@@ -96,35 +108,45 @@
         },
 
         findTodoList(date){
+            let instance = this;
             ajaxGetRequest('/2do/' + toStringByFormatting(date, ''), {}, function(data){
                 $('#todoListEl').empty();
 
-                $.each(data, function(index, item){
-                    let liItem = $('<li/>', {
-                        text: item.contents,
-                        class: 'list-group-item'
+                if(data.length !== 0) {
+                    $('#todoListW').removeClass('d-none');
+                    $('#emptyW').removeClass('d-flex');
+                    $('#emptyW').addClass('d-none');
+
+                    $.each(data, function (index, item) {
+                        let liItem = $('<li/>', {
+                            text: item.contents,
+                            class: 'list-group-item'
+                        });
+
+                        liItem.data('todoId', item.id);
+
+                        $('#todoListEl').append(liItem);
+
+                        if (index === 0)
+                            liItem.click();
                     });
+                }
+                else{
+                    $('#todoListW').addClass('d-none');
+                    $('#emptyW').removeClass('d-none');
+                    $('#emptyW').addClass('d-flex');
+                }
 
-                    liItem.data('todoId', item.id);
+                //OPTION CALLBACK
+                if( typeof instance.options.onFindTodoList == 'function' ) {
+                    instance.options.onFindTodoList(instance.element, data);
+                }
 
-                    if(index === 0)
-                        liItem.addClass('active');
-
-                    $('#todoListEl').append(liItem);
-                });
             }, null);
         },
 
         getActiveTodoId(){
             return $('.list-group-item.active').data('todoId');
-        },
-
-        getActiveTodoContents(){
-            return $('.list-group-item.active').text();
-        },
-
-        getItems: function(){
-            return this.options.items;
         },
 
         setTodoDate(date){
@@ -137,7 +159,7 @@
         }
     };
 
-    $.fn.todolist = function( options ){
+    $.fn.todoList = function( options ){
         let ret;
 
         if( !this.length ) {
