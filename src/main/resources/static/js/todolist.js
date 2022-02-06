@@ -87,12 +87,12 @@
             });
 
             let emptyWrapper = $('<div/>', {
-                id:'emptyW',
+                id:'todoEmptyW',
                 class: 'flex-1 align-items-center justify-content-center d-none'
             });
 
             let emptyImg = $('<img/>', {
-                src:'/static/img/empty_todo.png'
+                src:'/static/img/empty-todo.png'
             });
 
             emptyWrapper.append(emptyImg);
@@ -114,13 +114,14 @@
 
                 if(data.length !== 0) {
                     $('#todoListW').removeClass('d-none');
-                    $('#emptyW').removeClass('d-flex');
-                    $('#emptyW').addClass('d-none');
+                    $('#todoEmptyW').removeClass('d-flex');
+                    $('#todoEmptyW').addClass('d-none');
 
                     $.each(data, function (index, item) {
                         let liItem = $('<li/>', {
                             text: item.contents,
-                            class: 'list-group-item'
+                            class: 'list-group-item',
+                            style: 'cursor: pointer'
                         });
 
                         liItem.data('todoId', item.id);
@@ -133,8 +134,8 @@
                 }
                 else{
                     $('#todoListW').addClass('d-none');
-                    $('#emptyW').removeClass('d-none');
-                    $('#emptyW').addClass('d-flex');
+                    $('#todoEmptyW').removeClass('d-none');
+                    $('#todoEmptyW').addClass('d-flex');
                 }
 
                 //OPTION CALLBACK
