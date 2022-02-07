@@ -1,6 +1,5 @@
 package com.web.todo.util.unique;
 
-import com.web.todo.util.unique.UniqueIdUtil;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
