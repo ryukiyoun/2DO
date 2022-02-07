@@ -17,7 +17,7 @@ public class Todo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private User user;
 
@@ -32,4 +32,8 @@ public class Todo {
 
     @ColumnDefault(value = "0")
     private int progress;
+
+    public void setTodoUser(long userId){
+        this.user = User.builder().id(userId).build();
+    }
 }

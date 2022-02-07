@@ -11,8 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
@@ -37,9 +36,9 @@ public class TodoController {
     }
 
     @PostMapping("/2do")
-    public ResponseEntity<Long> saveTodo(@RequestPart("todo") String todoJson,
-                                         @RequestPart("files") MultipartFile[] files){
+    public ResponseEntity<Long> saveTodo(@RequestBody Todo todo,
+                                         @AuthenticationPrincipal UserDTO user){
 
-        return ResponseEntity.ok().body(todoSaveService.saveTodo(todoJson, files));
+        return ResponseEntity.ok().body(todoSaveService.saveTodo(todo, user));
     }
 }

@@ -20,7 +20,11 @@
 
             this.makeElement(instance);
 
+            this.setTodoDate(new Date());
+
             this.findTodoList(new Date());
+
+            this.setFocuse();
 
             $(instance.element).on('click', '.list-group-item', function(event){
                 if(!$(this).hasClass('active')) {
@@ -46,6 +50,20 @@
                             $('#todoInput').val('');
                             instance.findTodoList(new Date($('#todoDateText').data('todoDate')));
                         }, null);
+                }
+            });
+
+            $(instance.element).on('keydown', '#todoListEl', function(keyCode) {
+                let element;
+
+                if(keyCode.keyCode === 38)
+                    element = $(this).find('.active').prev();
+                else if(keyCode.keyCode === 40)
+                    element = $(this).find('.active').next();
+
+                if(element.length !== 0){
+                    element.focus();
+                    element.click();
                 }
             });
         },
@@ -83,7 +101,8 @@
 
             let ul = $('<ul/>', {
                 id: 'todoListEl',
-                class: 'list-group list-group-flush list-group-item-action'
+                class: 'list-group list-group-flush list-group-item-action',
+                tabindex: '0'
             });
 
             let emptyWrapper = $('<div/>', {
@@ -157,6 +176,10 @@
 
             $('#todoDateText').text(year + '년 ' + month + '월 ' + day + '일');
             $('#todoDateText').data('todoDate', year + '-' + ('0' + month).slice(-2) + '-' + ('0' + day).slice(-2));
+        },
+
+        setFocuse(){
+            $('#todoListEl').focus();
         }
     };
 

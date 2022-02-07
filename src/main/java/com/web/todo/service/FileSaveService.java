@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,37 +25,46 @@ public class FileSaveService {
     private final FileRepository fileRepository;
 
     @Transactional
-    public void saveTodoFiles(Todo todo, MultipartFile[] files) {
-        if (files.length != 0) {
-            Path dirPath = simpleSaveFileUtil.getDirPath();
-            Map<String, MultipartFile> saveFileMap = new HashMap<>();
+    public String saveTodoFiles(long todoId, MultipartFile[] files) {
+        Path dirPath = simpleSaveFileUtil.getDirPath();
+        Map<String, MultipartFile> saveFileMap = new HashMap<>();
 
-            for (MultipartFile file : files) {
-                String extension = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
-                String uniqueId = stringUniqueIdUtil.getUniqueId() + extension;
-                saveFileMap.put(uniqueId, file);
+        for (MultipartFile file : files) {
+            String extension = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
+            String uniqueId = stringUniqueIdUtil.getUniqueId() + extension;
+            saveFileMap.put(uniqueId, file);
 
-                AttachFile attachFile = AttachFile.builder()
-                        .originName(file.getOriginalFilename())
-                        .managerName(uniqueId)
-                        .extension(extension)
-                        .filePath(dirPath.toString())
-                        .todo(todo)
-                        .build();
+            AttachFile attachFile = AttachFile.builder()
+                    .originName(file.getOriginalFilename())
+                    .managerName(uniqueId)
+                    .extension(extension)
+                    .filePath(dirPath.toString())
+                    .todo(Todo.builder().id(todoId).build())
+                    .build();
 
-                fileRepository.save(attachFile);
-            }
-
-            try {
-                simpleSaveFileUtil.makeDir(dirPath);
-
-                for (String uniqueId : saveFileMap.keySet())
-                    simpleSaveFileUtil.uploadFile(dirPath, uniqueId, saveFileMap.get(uniqueId));
-            } catch (IOException e) {
-                rollBackFile(dirPath, saveFileMap);
-                throw new RuntimeException("file save error"); //todo 커스텀 Exception 변경 필요
-            }
+            fileRepository.save(attachFile);
         }
+
+        try {
+            simpleSaveFileUtil.makeDir(dirPath);
+
+            for (String uniqueId : saveFileMap.keySet())
+                simpleSaveFileUtil.uploadFile(dirPath, uniqueId, saveFileMap.get(uniqueId));
+
+            return saveFileMap.keySet().iterator().next();
+        } catch (IOException e) {
+            rollBackFile(dirPath, saveFileMap);
+            throw new RuntimeException("file save error");
+        }
+    }
+
+    @Transactional
+    public String removeFile(String managerName) {
+        Optional<AttachFile> file = fileRepository.findAllByManagerName(managerName);
+
+        file.ifPresent(attachFile -> new File(attachFile.getFilePath() + File.separator + managerName + attachFile.getExtension()).delete());
+
+        return "";
     }
 
     public void rollBackFile(Path path, Map<String, MultipartFile> files) {

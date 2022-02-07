@@ -1,0 +1,10 @@
+#fileListW::-webkit-scrollbar{
+    background: transparent;
+}
+
+#fileListW::-webkit-scrollbar-thumb{
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 99999px;
+    border: 0.3125em solid transparent;
+    background-clip: content-box;
+}

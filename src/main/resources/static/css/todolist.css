@@ -1,0 +1,21 @@
+#todoListW::-webkit-scrollbar{
+    background: transparent;
+}
+
+#todoListW::-webkit-scrollbar-thumb{
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 99999px;
+    border: 0.3125em solid transparent;
+    background-clip: content-box;
+}
+
+.list-group-item-action .list-group-item:hover{
+    background-color: #edf0f4;
+}
+
+.list-group-item.active{
+    background-color: #edf0f4;
+    color: black;
+    border-color: rgba(0, 0, 0, 0.125);
+    border-width: 0 0 1px;
+}

@@ -92,10 +92,8 @@
                             class: 'card-body p-2 d-flex align-items-center'
                         });
 
-                        let iconClass = FileList.prototype.checkExtension(item.extension);
-
                         let icon = $('<i/>', {
-                            class: iconClass,
+                            class: FileList.prototype.checkExtension(item.extension),
                             style: 'font-size: 2.5em;'
                         });
 

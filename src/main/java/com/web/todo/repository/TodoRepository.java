@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface TodoRepository extends JpaRepository<Todo, Long> {
-    List<Todo> findAllByUser_IdAndTodoDate(long id, LocalDate date);
+    List<Todo> findAllByUser_IdAndTodoDateOrderByIdDesc(long id, LocalDate date);
 }

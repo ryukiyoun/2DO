@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      data-layout-decorate="~{default-layout}">
+<head>
+    <title>Todo</title>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet'/>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.css' rel='stylesheet'/>
+    <link href='https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.13.1/css/all.css' rel='stylesheet'>
+    <link href="https://unpkg.com/filepond@^4/dist/filepond.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+    <link href="/static/css/todolist.css" rel="stylesheet">
+    <link href="/static/css/filelist.css" rel="stylesheet">
+    <style>
+        .fc-day {
+            text-align: end;
+        }
+
+        .fc-day-sun {
+            color: #E11D48 !important;
+        }
+
+        .fc-day-sat {
+            color: #2361ce !important;
+        }
+
+        .fc-holiday{
+            color: #E11D48 !important;
+        }
+
+        .fc-holiday-other{
+            color: #E11D48 !important;
+            opacity: .3;
+        }
+
+        .holiday {
+            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 11px;
+        }
+
+        .fc-scroller.fc-scroller-liquid-absolute::-webkit-scrollbar{
+            background: transparent;
+        }
+
+        .fc-scroller.fc-scroller-liquid-absolute::-webkit-scrollbar-thumb{
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 99999px;
+            border: 0.3125em solid transparent;
+            background-clip: content-box;
+        }
+
+        .filepond--root {
+            max-height: 20em;
+        }
+    </style>
+</head>
+
+<th:block layout:fragment="content">
+    <div class="d-flex flex-1" style="min-height: 0">
+        <div class="col-5 d-flex flex-column border-right p-3" style="background-color: #f9f9f9;">
+            <div class="card mb-2 d-flex flex-column flex-1">
+                <div class="card-body" style="min-height: 0">
+                    <div id="calendarEl"></div>
+                </div>
+            </div>
+            <div class="card mb-2 d-flex flex-column flex-1" style="min-height: 0">
+                <div class="card-body">
+                    <div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="todoList" class="col-5 d-flex flex-column border-right p-3" style="background-color: #f9f9f9;"></div>
+
+        <div class="col-2 d-flex flex-column p-3" style="background-color: #f9f9f9;">
+            <div class="card mb-2" style="min-height: 0">
+                <div class="card-body px-3 py-2">
+                    <p style="font-size: 13px">파일 첨부</p>
+                    <input id="fileUploadEl" type="file" name="filepond" multiple/>
+                </div>
+            </div>
+            <div class="card mb-2 d-flex flex-column" style="min-height: 24em">
+                <div id="fileList" class="card-body px-3 py-2 overflow-auto"></div>
+            </div>
+            <div class="card mb-2 d-flex flex-column flex-1" style="min-height: 100px;">
+                <div class="card-body px-3 py-2">
+                    <div>
+                        <p style="font-size: 13px">Todo 설정</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="attachFile" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">파일 첨부</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" style="font-size: 12px">첨부</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+<th:block layout:fragment="script">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales/ko.min.js"></script>
+    <script src="https://unpkg.com/filepond@^4/dist/filepond.js"></script>
+    <script src="/static/js/todolist.js"></script>
+    <script src="/static/js/filelist.js"></script>
+    <script th:inline="javascript">
+        let calendar;
+        let todoList;
+        let fileUpload;
+        let fileList;
+
+        $(function () {
+            $( window ).resize( function() {
+                let pxPerWindow = 0.632029;
+
+                let h = window.innerHeight;
+
+                let calendarCardH = pxPerWindow * h;
+
+                let calendarEl = document.getElementById('calendarEl');
+                calendarEl.setAttribute('style', 'height:' + calendarCardH + 'px');
+            });
+
+            let calendarEl = document.getElementById('calendarEl');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                themeSystem: 'flatly',
+                initialView: 'dayGridMonth',
+                timeZone: 'local',
+                editable: true,
+                selectable: true,
+                locale: 'ko',
+                validRange: {
+                    start: '1900-01-01',
+                    end: '3000-12-31'
+                },
+                headerToolbar: {
+                    left: 'title',
+                    center: '',
+                    right: 'prevYear,prev,next,nextYear'
+                },
+                dateClick: function (info) {
+                    todoList.setTodoDate(info.date);
+                    todoList.findTodoList(info.date)
+                    todoList.setFocuse();
+                }
+            });
+            calendar.render();
+
+            setHoliday(new Date());
+
+            todoList = $('#todoList').todoList({
+                onItemClick: function(element, event){
+                    fileList.findFileList(todoList.getActiveTodoId());
+                },
+                onFindTodoList: function(element, data){
+                    if(data.length === 0){
+                        fileList.setEmpty();
+                    }
+                }
+            });
+
+            fileUpload = FilePond.create(document.getElementById('fileUploadEl'), {
+                maxParallelUploads: 1,
+                server: {
+                    process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+                        const formData = new FormData();
+                        formData.append(fieldName, file, file.name);
+
+                        const request = new XMLHttpRequest();
+                        request.open('POST', '/files/' + todoList.getActiveTodoId());
+                        request.setRequestHeader('X-XSRF-TOKEN', csrfToken);
+
+                        request.upload.onprogress = (e) => {
+                            progress(e.lengthComputable, e.loaded, e.total);
+                        };
+
+                        request.onload = function (response) {
+                            if (request.status >= 200 && request.status < 300) {
+                                load();
+                                fileUpload.removeFile();
+                                fileList.findFileList(todoList.getActiveTodoId());
+                            } else {
+                                error('file upload error');
+                            }
+                        };
+
+                        request.send(formData);
+                    }
+                }
+            });
+
+            fileUpload.on('updatefiles', function(){
+                console.log('asdf');
+            })
+
+            fileList = $('#fileList').fileList();
+        });
+
+        $(document).on('click', '.fc-prev-button, .fc-next-button', function () {
+            setHoliday(calendar.getDate());
+        });
+
+        function setHoliday(date) {
+            let prevDate = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+            let nextDate = new Date(date.getFullYear(), date.getMonth() - 1, 1);
+
+            callApi(prevDate.getFullYear(), prevDate.getMonth());
+            callApi(date.getFullYear(), date.getMonth());
+            callApi(nextDate.getFullYear(), nextDate.getMonth());
+        }
+
+        function callApi(year, month){
+            ajaxGetRequest('/api/national/day', {
+                apiURL: 'http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getHoliDeInfo',
+                solYear: year,
+                solMonth: ('0' + (month + 1)).slice(-2)
+            }, function (data) {
+                appendHoliday(data)
+            }, null);
+        }
+
+        function appendHoliday(data) {
+            let item = data.response.body.items.item;
+            if (item !== undefined) {
+                if (Array.isArray(item)) {
+                    $.each(data.response.body.items.item, function (index, item) {
+                        holidaySetText(item);
+                    });
+                } else
+                    holidaySetText(item);
+            }
+        }
+
+        function holidaySetText(item){
+            let locdate = item.locdate.toString();
+
+            let year = locdate.substr(0, 4);
+            let month = locdate.substr(4, 2);
+            let day = locdate.substr(6, 2);
+
+            let date = year + '-' + month + '-' + day;
+            let selector = "[data-date='" + date + "']";
+
+            let dayEl = $("#calendarEl").find(selector);
+            let dayTextWrapper = dayEl.find('.fc-daygrid-day-frame');
+            let holidayTextEl = $("#calendarEl").find(selector).find('.fc-daygrid-day-events');
+
+            dayTextWrapper.removeClass('fc-holiday-other', 'fc-holiday');
+            if(dayEl.hasClass('fc-day-other'))
+                dayTextWrapper.addClass("fc-holiday-other");
+            else
+                dayTextWrapper.addClass("fc-holiday");
+
+            if (holidayTextEl.find('.holiday').length === 0) {
+                holidayTextEl.append("<span class='holiday'>" + item.dateName + "</span>");
+            }
+        }
+    </script>
+</th:block>
+</html>

@@ -1,0 +1,11 @@
+.text-small {
+    font-size: 85%;
+}
+
+.flex-header{
+    flex: 0 0 56px;
+}
+
+.flex-1{
+    flex: 1;
+}

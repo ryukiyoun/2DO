@@ -1,6 +1,9 @@
 package com.web.todo.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.todo.dto.UserDTO;
+import com.web.todo.entity.Todo;
+import com.web.todo.enumable.TodoState;
 import com.web.todo.service.TodoFindService;
 import com.web.todo.service.TodoSaveService;
 import com.web.todo.service.UserFindService;
@@ -11,8 +14,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.mock.web.MockPart;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -21,7 +22,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -32,6 +34,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class TodoControllerTest {
     @Autowired
     MockMvc mockMvc;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @MockBean
     TodoFindService todoFindService;
@@ -71,13 +76,13 @@ class TodoControllerTest {
 
     @Test
     public void saveTodo() throws Exception{
-        MockMultipartFile file1 = new MockMultipartFile("files", "filename-1.txt", "text/plain", "1".getBytes());
+        //given
+        String content = objectMapper.writeValueAsString(Todo.builder().contents("test").state(TodoState.NORMAL).build());
 
         //when then
-        mockMvc.perform(multipart("/2do")
-                .file(file1)
-                .part(new MockPart("todo",
-                        "{\"userId\":1, \"title\":\"test\", \"contents\":\"test contents\", \"state\":\"COMPELET\", \"progress\":50, \"todoDate\":\"2022-01-01\"}".getBytes()))
+        mockMvc.perform(post("/2do")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(content)
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andDo(print());
