@@ -11,6 +11,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebM
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +22,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,8 +33,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = FileController.class, includeFilters = @ComponentScan.Filter(classes = {EnableWebSecurity.class}))
 @AutoConfigureWebMvc
@@ -80,6 +85,34 @@ class FileControllerTest {
         mockMvc.perform(get("/files/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(fixtureJson))
+                .andDo(print());
+    }
+
+    @Test
+    void downloadFile() throws Exception {
+        //given
+        AttachFile file = AttachFile.builder()
+                .id(1)
+                .originName("han")
+                .managerName("alkdjfalieghl123124")
+                .extension(".txt")
+                .build();
+
+        Resource resource = new ByteArrayResource("testFile Contents".getBytes());
+
+        given(fileFindService.findFileById(anyLong())).willReturn(file);
+        given(fileFindService.findFile(anyLong())).willReturn(resource);
+
+        String fileName = "attachment; fileName=\"" + (URLEncoder.encode(file.getOriginName(), StandardCharsets.UTF_8)+"\"").replace('+', ' ');
+
+        //when, then
+        mockMvc.perform(get("/file/download/1"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, fileName))
+                .andExpect(header().string(HttpHeaders.PRAGMA, "no-cache"))
+                .andExpect(header().string(HttpHeaders.EXPIRES, "0"))
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate"))
+                .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
                 .andDo(print());
     }
 

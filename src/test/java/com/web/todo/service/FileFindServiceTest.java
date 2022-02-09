@@ -78,6 +78,35 @@ class FileFindServiceTest {
     }
 
     @Test
+    public void findFileById(){
+        //given
+        AttachFile file = AttachFile.builder()
+                .id(1)
+                .todo(Todo.builder().id(1).build())
+                .originName("file1")
+                .managerName("manager1")
+                .extension("txt")
+                .filePath("test/dir")
+                .build();
+
+        given(fileRepository.findById(anyLong())).willReturn(Optional.of(file));
+
+        //when
+        AttachFile result = fileFindService.findFileById(1);
+
+        assertThat(result, is(file));
+    }
+
+    @Test
+    public void findFileByIdEmpty(){
+        //given
+        given(fileRepository.findById(anyLong())).willReturn(Optional.empty());
+
+        //when, then
+        assertThrows(RuntimeException.class, () -> fileFindService.findFileById(1));
+    }
+
+    @Test
     public void findFile() throws Exception{
         //given
         AttachFile attachFile = AttachFile.builder()
@@ -94,14 +123,9 @@ class FileFindServiceTest {
         given(fileRepository.findById(anyLong()))
                 .willReturn(Optional.of(attachFile));
 
-        ResponseEntity<Resource> result = fileFindService.findFile(1);
+        Resource result = fileFindService.findFile(1);
 
-        assertTrue(result.getHeaders().containsKey(HttpHeaders.CONTENT_DISPOSITION));
-
-        assertThat(result.getStatusCode(), is(HttpStatus.OK));
-        assertThat(result.getHeaders().get(HttpHeaders.CONTENT_DISPOSITION), is(not(nullValue())));
-        assertTrue(result.getHeaders().get(HttpHeaders.CONTENT_DISPOSITION).contains("attachment; fileName=\"" + (URLEncoder.encode(attachFile.getOriginName(), StandardCharsets.UTF_8)) + "\""));
-        assertThat(result.getBody(), is(resource));
+        assertThat(result, is(resource));
     }
 
     @Test
