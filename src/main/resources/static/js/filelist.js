@@ -18,8 +18,14 @@
 
             this.makeElement(instance);
 
+            $('#emptyFileImg').attr('width', $('#fileList').width() * 0.8);
+
             $(instance.element).on('click', '.card.my-1', function(event){
                 location.href = $(this).data('file');
+            });
+
+            $(window).resize(function() {
+                $('#emptyFileImg').attr('width', $('#fileList').width() * 0.8);
             });
         },
 
@@ -52,7 +58,7 @@
             let fileListWrapper = $('<div/>', {
                 id: 'fileListW',
                 class: 'overflow-auto d-none',
-                style: 'height: 20em;'
+                style: 'min-height: 16em;'
             })
 
             $(instance.element).append(fileWrapper);
@@ -60,10 +66,11 @@
 
             let emptyWrapper = $('<div/>', {
                 id:'fileEmptyW',
-                class: 'overflow-hidden'
+                class: 'overflow-hidden d-flex flex-column flex-1 justify-content-center align-items-center'
             })
 
             let emptyImg = $('<img/>', {
+                id: 'emptyFileImg',
                 src: '/static/img/empty-file.png'
             })
 
@@ -73,10 +80,13 @@
         },
 
         findFileList(todoId){
+            let instance = this;
+
             ajaxGetRequest('/files/' + todoId, {}, function(data){
                 $('#fileListW').empty();
 
                 if(data.length !== 0){
+                    $('#fileEmptyW').removeClass('d-flex');
                     $('#fileEmptyW').addClass('d-none');
                     $('#fileListW').removeClass('d-none');
 
@@ -103,7 +113,7 @@
 
                         let text = $('<p/>', {
                             text: item.originName,
-                            class:'m-0',
+                            class:'m-0 cut-text',
                             style: 'font-size: 13px;'
                         });
 
@@ -116,15 +126,14 @@
                         $('#fileListW').append(card);
                     });
                 }
-                else{
-                    $('#fileEmptyW').removeClass('d-none');
-                    $('#fileListW').addClass('d-none');
-                }
+                else
+                    instance.setEmpty();
             }, null);
         },
 
         setEmpty(){
             $('#fileEmptyW').removeClass('d-none');
+            $('#fileEmptyW').addClass('d-flex');
             $('#fileListW').addClass('d-none');
         },
 
