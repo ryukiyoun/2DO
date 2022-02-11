@@ -9,7 +9,6 @@ import com.web.todo.service.TodoSaveService;
 import com.web.todo.service.UserFindService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
@@ -29,7 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 @WebMvcTest(controllers = TodoController.class, includeFilters = @ComponentScan.Filter(classes = {EnableWebSecurity.class}))
-@AutoConfigureWebMvc
 @WithMockUser(username = "user")
 class TodoControllerTest {
     @Autowired

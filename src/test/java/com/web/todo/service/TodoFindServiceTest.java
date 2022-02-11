@@ -52,7 +52,7 @@ public class TodoFindServiceTest {
                 .progress(100)
                 .build());
 
-        given(todoRepository.findAllByUser_IdAndTodoDate(anyLong(), any(LocalDate.class))).willReturn(todoList);
+        given(todoRepository.findAllByUser_IdAndTodoDateOrderByIdDesc(anyLong(), any(LocalDate.class))).willReturn(todoList);
         given(simpleDateUtil.stringToLocalDate(anyString(), anyString())).willReturn(LocalDate.now());
 
         //when

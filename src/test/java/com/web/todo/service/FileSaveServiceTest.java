@@ -1,5 +1,6 @@
 package com.web.todo.service;
 
+import com.web.todo.entity.AttachFile;
 import com.web.todo.entity.Todo;
 import com.web.todo.repository.FileRepository;
 import com.web.todo.util.file.FileUtil;
@@ -16,9 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -58,36 +59,10 @@ class FileSaveServiceTest {
         given(simpleSaveFileUtil.getDirPath()).willReturn(tempDir);
 
         //when
-        fileSaveService.saveTodoFiles(Todo.builder()
-                .id(1)
-                .contents("test")
-                .todoDate(LocalDate.now())
-                .progress(24)
-                .build(), files);
+        fileSaveService.saveTodoFiles(1, files);
 
         //then
         verify(fileRepository, times(1)).save(any());
-    }
-
-    @Test
-    void saveTodoEmptyFiles() throws IOException{
-        //given
-        MockMultipartFile[] files = new MockMultipartFile[] {};
-
-        Todo todoMock = mock(Todo.class);
-
-        //when
-        fileSaveService.saveTodoFiles(Todo.builder()
-                .id(1)
-                .contents("test")
-                .todoDate(LocalDate.now())
-                .progress(24)
-                .build(), files);
-
-        //then
-        verify(fileRepository, times(0)).save(any());
-        verify(simpleSaveFileUtil, times(0)).makeDir(any());
-        verify(simpleSaveFileUtil, times(0)).uploadFile(any(Path.class), anyString(), any(MultipartFile.class));
     }
 
     @Test
@@ -103,12 +78,7 @@ class FileSaveServiceTest {
         given(simpleSaveFileUtil.uploadFile(any(Path.class), anyString(), any(MultipartFile.class))).willThrow(new IOException("file save error"));
 
         //when, then
-        assertThrows(RuntimeException.class, () -> fileSaveService.saveTodoFiles(Todo.builder()
-                .id(1)
-                .contents("test")
-                .todoDate(LocalDate.now())
-                .progress(24)
-                .build(), files));
+        assertThrows(RuntimeException.class, () -> fileSaveService.saveTodoFiles(1, files));
     }
 
     @Test
@@ -130,5 +100,18 @@ class FileSaveServiceTest {
         //then
         assertThat(Files.exists(file1), is(false));
         assertThat(Files.exists(file2), is(false));
+    }
+
+    @Test
+    public void removeFile() throws IOException{
+        Path file1 = Files.createFile(tempDir.resolve("test.txt"));
+        given(fileRepository.findAllByManagerName(anyString()))
+                .willReturn(Optional
+                        .of(AttachFile.builder()
+                                .filePath(tempDir.toString())
+                                .extension(".txt")
+                                .build()));
+
+        fileSaveService.removeFile("test");
     }
 }
