@@ -50,6 +50,7 @@ public class FileController {
 
     @DeleteMapping("/file/remove/{managerName}")
     public ResponseEntity<String> removeTodoFile(@PathVariable String managerName){
-        return ResponseEntity.ok().body(fileSaveService.removeFile(managerName));
+        fileSaveService.removeFile(managerName);
+        return ResponseEntity.ok().body(null);
     }
 }

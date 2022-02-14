@@ -130,9 +130,6 @@ class FileControllerTest {
 
     @Test
     void removeFile() throws Exception{
-        //given
-        given(fileSaveService.removeFile(anyString())).willReturn("success");
-
         //when then
         mockMvc.perform(delete("/file/remove/testfile")
                 .with(csrf()))

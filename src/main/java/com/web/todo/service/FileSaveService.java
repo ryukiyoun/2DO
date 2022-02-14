@@ -59,12 +59,10 @@ public class FileSaveService {
     }
 
     @Transactional
-    public String removeFile(String managerName) {
+    public void removeFile(String managerName) {
         Optional<AttachFile> file = fileRepository.findAllByManagerName(managerName);
 
         file.ifPresent(attachFile -> new File(attachFile.getFilePath() + File.separator + managerName + attachFile.getExtension()).delete());
-
-        return "";
     }
 
     public void rollBackFile(Path path, Map<String, MultipartFile> files) {

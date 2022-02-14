@@ -1,7 +1,6 @@
 package com.web.todo.service;
 
 import com.web.todo.entity.AttachFile;
-import com.web.todo.entity.Todo;
 import com.web.todo.repository.FileRepository;
 import com.web.todo.util.file.FileUtil;
 import com.web.todo.util.unique.UniqueIdUtil;
@@ -10,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,6 +43,7 @@ class FileSaveServiceTest {
     @Mock
     FileRepository fileRepository;
 
+    @Spy
     @InjectMocks
     FileSaveService fileSaveService;
 
@@ -51,18 +52,15 @@ class FileSaveServiceTest {
         //given
         MockMultipartFile file1 = new MockMultipartFile("files", "filename-1.txt", "text/plain", "test file".getBytes());
 
-        MockMultipartFile[] files = new MockMultipartFile[] {file1};
-
-        Todo todoMock = mock(Todo.class);
-
         given(stringUniqueIdUtil.getUniqueId()).willReturn("testFileUnique");
-        given(simpleSaveFileUtil.getDirPath()).willReturn(tempDir);
+        given(simpleSaveFileUtil.getDirPath()).willReturn(Path.of("./testDirectory"));
 
         //when
-        fileSaveService.saveTodoFiles(1, files);
+        String result = fileSaveService.saveTodoFiles(1, new MockMultipartFile[] {file1});
 
         //then
-        verify(fileRepository, times(1)).save(any());
+        verify(fileRepository, times(1)).save(any(AttachFile.class));
+        assertThat(result ,is("testFileUnique.txt"));
     }
 
     @Test
@@ -70,15 +68,11 @@ class FileSaveServiceTest {
         //given
         MockMultipartFile file1 = new MockMultipartFile("files", "filename-1.txt", "text/plain", "test file".getBytes());
 
-        MockMultipartFile[] files = new MockMultipartFile[] {file1};
-
-        Todo todoMock = mock(Todo.class);
-
-        given(simpleSaveFileUtil.getDirPath()).willReturn(tempDir);
+        given(simpleSaveFileUtil.getDirPath()).willReturn(Path.of("./testDirectory"));
         given(simpleSaveFileUtil.uploadFile(any(Path.class), anyString(), any(MultipartFile.class))).willThrow(new IOException("file save error"));
 
         //when, then
-        assertThrows(RuntimeException.class, () -> fileSaveService.saveTodoFiles(1, files));
+        assertThrows(RuntimeException.class, () -> fileSaveService.saveTodoFiles(1, new MockMultipartFile[] {file1}));
     }
 
     @Test
@@ -103,15 +97,22 @@ class FileSaveServiceTest {
     }
 
     @Test
-    public void removeFile() throws IOException{
-        Path file1 = Files.createFile(tempDir.resolve("test.txt"));
+    public void removeFile() {
+        //given
+        AttachFile mockAttachFile = mock(AttachFile.class);
+
+        given(mockAttachFile.getExtension()).willReturn(".txt");
+        given(mockAttachFile.getFilePath()).willReturn(tempDir.toString());
+
         given(fileRepository.findAllByManagerName(anyString()))
                 .willReturn(Optional
-                        .of(AttachFile.builder()
-                                .filePath(tempDir.toString())
-                                .extension(".txt")
-                                .build()));
+                        .of(mockAttachFile));
 
+        //when
         fileSaveService.removeFile("test");
+
+        //then
+        verify(mockAttachFile, times(1)).getExtension();
+        verify(mockAttachFile, times(1)).getFilePath();
     }
 }
