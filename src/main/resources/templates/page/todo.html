@@ -29,7 +29,6 @@
 
         .fc-holiday-other{
             color: #E11D48 !important;
-            opacity: .3;
         }
 
         .holiday {
@@ -51,6 +50,26 @@
         .filepond--root {
             max-height: 20em;
         }
+
+        .custom-range {
+
+        }
+
+        .custom-range::-webkit-slider-thumb {
+            background: gray;
+        }
+
+        .custom-range::-moz-range-thumb {
+            background: gray;
+        }
+
+        .custom-range::-ms-thumb {
+            background: gray;
+        }
+
+        .custom-range::-webkit-slider-thumb:active {
+            background-color: #575757;
+        }
     </style>
 </head>
 
@@ -62,47 +81,43 @@
                     <div id="calendarEl"></div>
                 </div>
             </div>
-            <div class="card mb-2 d-flex flex-column flex-1" style="min-height: 0">
-                <div class="card-body">
-                    <div></div>
-                </div>
-            </div>
         </div>
 
         <div id="todoList" class="col-5 d-flex flex-column border-right p-3" style="background-color: #f9f9f9;"></div>
 
         <div class="col-2 d-flex flex-column p-3" style="background-color: #f9f9f9;">
-            <div class="card mb-2" style="min-height: 0">
+            <div class="card mb-2">
                 <div class="card-body px-3 py-2">
                     <p style="font-size: 13px">파일 첨부</p>
                     <input id="fileUploadEl" type="file" name="filepond" multiple/>
                 </div>
             </div>
-            <div class="card mb-2 d-flex flex-column" style="min-height: 24em">
-                <div id="fileList" class="card-body px-3 py-2 overflow-auto"></div>
+            <div class="card mb-2 d-flex flex-column flex-1" style="min-height: 20em">
+                <div id="fileList" class="card-body px-3 py-2 d-flex flex-column flex-1 overflow-auto"></div>
             </div>
             <div class="card mb-2 d-flex flex-column flex-1" style="min-height: 100px;">
-                <div class="card-body px-3 py-2">
-                    <div>
-                        <p style="font-size: 13px">Todo 설정</p>
+                <div class="card-body px-3 py-2 d-flex flex-column flex-1">
+                    <p style="font-size: 13px">Todo 설정</p>
+                    <div class="btn-group mb-3 overflow-auto" role="group">
+                        <button type="button" class="btn btn-outline-secondary flex-1 active">
+                            <i class="bi bi-journal"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary flex-1">
+                            <i class="bi bi-journal-x"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary flex-1">
+                            <i class="bi bi-journal-check"></i>
+                        </button>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="attachFile" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">파일 첨부</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    ...
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" style="font-size: 12px">첨부</button>
+                    <div class="d-flex flex-column mb-3">
+                        <div class="d-flex justify-content-between">
+                            <p class="mb-0" style="font-size: 13px">진행률</p>
+                            <p id="percent" class="mb-0" style="font-size: 13px">50%</p>
+                        </div>
+                        <input type="range" class="form-range custom-range" id="processRange">
+                    </div>
+                    <p class="mb-0" style="font-size: 13px">메모</p>
+                    <textarea id="memo" class="d-flex flex-column flex-1" style="font-size: 13px"></textarea>
                 </div>
             </div>
         </div>
@@ -160,7 +175,7 @@
             setHoliday(new Date());
 
             todoList = $('#todoList').todoList({
-                onItemClick: function(element, event){
+                onItemClick: function(){
                     fileList.findFileList(todoList.getActiveTodoId());
                 },
                 onFindTodoList: function(element, data){
@@ -185,7 +200,7 @@
                             progress(e.lengthComputable, e.loaded, e.total);
                         };
 
-                        request.onload = function (response) {
+                        request.onload = function () {
                             if (request.status >= 200 && request.status < 300) {
                                 load();
                                 fileUpload.removeFile();
@@ -200,15 +215,19 @@
                 }
             });
 
-            fileUpload.on('updatefiles', function(){
-                console.log('asdf');
-            })
-
             fileList = $('#fileList').fileList();
         });
 
         $(document).on('click', '.fc-prev-button, .fc-next-button', function () {
             setHoliday(calendar.getDate());
+        });
+
+        $('#processRange').on('change', function() {
+            console.log('asdf');
+        });
+
+        $('#processRange').on('input', function(event) {
+            $('#percent').text(this.value + '%');
         });
 
         function setHoliday(date) {
