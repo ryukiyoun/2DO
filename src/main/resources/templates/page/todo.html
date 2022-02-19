@@ -99,13 +99,13 @@
                 <div class="card-body px-3 py-2 d-flex flex-column flex-1">
                     <p style="font-size: 13px">Todo 설정</p>
                     <div class="btn-group mb-3 overflow-auto" role="group">
-                        <button type="button" class="btn btn-outline-secondary flex-1 active">
+                        <button type="button" class="btn btn-outline-secondary flex-1 active" data-bs-toggle="tooltip" data-bs-placement="top" title="기본">
                             <i class="bi bi-journal"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary flex-1">
+                        <button type="button" class="btn btn-outline-secondary flex-1" data-bs-toggle="tooltip" data-bs-placement="top" title="취소">
                             <i class="bi bi-journal-x"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary flex-1">
+                        <button type="button" class="btn btn-outline-secondary flex-1" data-bs-toggle="tooltip" data-bs-placement="top" title="완료">
                             <i class="bi bi-journal-check"></i>
                         </button>
                     </div>
@@ -216,6 +216,11 @@
             });
 
             fileList = $('#fileList').fileList();
+
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
         });
 
         $(document).on('click', '.fc-prev-button, .fc-next-button', function () {
