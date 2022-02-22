@@ -41,4 +41,9 @@ public class TodoController {
 
         return ResponseEntity.ok().body(todoSaveService.saveTodo(todo, user));
     }
+
+    @PostMapping("/2do/progress")
+    public ResponseEntity<Integer> changeProgress(@RequestBody Todo todo){
+        return ResponseEntity.ok().body(todoSaveService.changeProgress(todo));
+    }
 }

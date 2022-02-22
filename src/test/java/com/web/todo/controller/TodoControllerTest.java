@@ -19,13 +19,14 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = TodoController.class, includeFilters = @ComponentScan.Filter(classes = {EnableWebSecurity.class}))
 @WithMockUser(username = "user")
@@ -77,12 +78,35 @@ class TodoControllerTest {
         //given
         String content = objectMapper.writeValueAsString(Todo.builder().contents("test").state(TodoState.NORMAL).build());
 
+        given(todoSaveService.saveTodo(any(Todo.class), any(UserDTO.class))).willReturn(1L);
+
         //when then
         mockMvc.perform(post("/2do")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(content)
+                .with(csrf())
+                .with(user(UserDTO.builder()
+                        .id(1)
+                        .name("user")
+                        .password("pass").build())))
+                .andExpect(status().isOk())
+                .andExpect(content().string("1"))
+                .andDo(print());
+    }
+
+    @Test
+    public void changeProgress() throws Exception{
+        //given
+        String content = objectMapper.writeValueAsString(Todo.builder().id(1).progress(15).build());
+
+        given(todoSaveService.changeProgress(any(Todo.class))).willReturn(15);
+        //when then
+        mockMvc.perform(post("/2do/progress")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(content)
                 .with(csrf()))
                 .andExpect(status().isOk())
+                .andExpect(content().string("15"))
                 .andDo(print());
     }
 }

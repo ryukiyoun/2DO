@@ -11,10 +11,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,5 +44,37 @@ public class TodoSaveServiceTest {
         long id = todoSaveService.saveTodo(todo, UserDTO.builder().build());
 
         assertThat(id, is(todo.getId()));
+    }
+
+    @Test
+    public void changeProgress() {
+        //given
+        Todo todo = Todo.builder()
+                .id(1)
+                .progress(30)
+                .build();
+
+        given(todoRepository.findById(anyLong())).willReturn(Optional.of(todo));
+
+        //when
+        int progress = todoSaveService.changeProgress(todo);
+
+        assertThat(progress, is(todo.getProgress()));
+    }
+
+    @Test
+    public void changeProgressEmptyTodo() {
+        //given
+        Todo todo = Todo.builder()
+                .id(1)
+                .progress(30)
+                .build();
+
+        given(todoRepository.findById(anyLong())).willReturn(Optional.empty());
+
+        //when
+        int progress = todoSaveService.changeProgress(todo);
+
+        assertThat(progress, is(0));
     }
 }

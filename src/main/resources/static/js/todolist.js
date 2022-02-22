@@ -24,8 +24,6 @@
 
             this.findTodoList(new Date());
 
-            this.setFocus();
-
             $(instance.element).on('click', '.list-group-item', function(event){
                 if(!$(this).hasClass('active')) {
                     let todoItemActive = $('.list-group-item.active');
@@ -225,10 +223,10 @@
                         liItem.append(btnDiv);
 
                         btnDiv.append(normalBtn);
-                        //btnDiv.append(cancelBtn);
-                        //btnDiv.append(completeBtn);
 
                         liItem.data('todoId', item.id);
+                        liItem.data('state', item.state);
+                        liItem.data('progress', item.progress);
 
                         $('#todoListEl').append(liItem);
 
@@ -254,6 +252,18 @@
             return $('.list-group-item.active').data('todoId');
         },
 
+        getActiveTodo(){
+            return {
+                todoId: $('.list-group-item.active').data('todoId'),
+                state: $('.list-group-item.active').data('state'),
+                progress: $('.list-group-item.active').data('progress'),
+            };
+        },
+
+        updateActiveProgress(progress){
+            $('.list-group-item.active').data('progress', progress);
+        },
+
         setTodoDate(date){
             let year = date.getFullYear();
             let month = date.getMonth() + 1;
@@ -261,10 +271,6 @@
 
             $('#todoDateText').text(year + '년 ' + month + '월 ' + day + '일');
             $('#todoDateText').data('todoDate', year + '-' + ('0' + month).slice(-2) + '-' + ('0' + day).slice(-2));
-        },
-
-        setFocus(){
-            $('#todoListEl').focus();
         }
     };
 

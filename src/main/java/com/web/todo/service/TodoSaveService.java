@@ -18,4 +18,16 @@ public class TodoSaveService {
         todo.setTodoUser(user.getId());
         return todoRepository.save(todo).getId();
     }
+
+    @Transactional
+    public int changeProgress(Todo todo){
+        Todo searchTodo = todoRepository.findById(todo.getId()).orElse(null);
+
+        if(searchTodo != null) {
+            searchTodo.progressUpdate(todo.getProgress());
+            return searchTodo.getProgress();
+        }
+
+        return 0;
+    }
 }

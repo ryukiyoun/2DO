@@ -98,14 +98,14 @@
             <div class="card mb-2 d-flex flex-column flex-1" style="min-height: 100px;">
                 <div class="card-body px-3 py-2 d-flex flex-column flex-1">
                     <p style="font-size: 13px">Todo 설정</p>
-                    <div class="btn-group mb-3 overflow-auto" role="group">
-                        <button type="button" class="btn btn-outline-secondary flex-1 active" data-bs-toggle="tooltip" data-bs-placement="top" title="기본">
+                    <div id="stateBtnGroup" class="btn-group mb-3 overflow-auto" role="group">
+                        <button id="NORMAL" type="button" class="btn btn-outline-secondary flex-1" data-bs-toggle="tooltip" data-bs-placement="top" title="기본">
                             <i class="bi bi-journal"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary flex-1" data-bs-toggle="tooltip" data-bs-placement="top" title="취소">
+                        <button id="CANCEL" type="button" class="btn btn-outline-secondary flex-1" data-bs-toggle="tooltip" data-bs-placement="top" title="취소">
                             <i class="bi bi-journal-x"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary flex-1" data-bs-toggle="tooltip" data-bs-placement="top" title="완료">
+                        <button id="COMPLETE" type="button" class="btn btn-outline-secondary flex-1" data-bs-toggle="tooltip" data-bs-placement="top" title="완료">
                             <i class="bi bi-journal-check"></i>
                         </button>
                     </div>
@@ -167,7 +167,6 @@
                 dateClick: function (info) {
                     todoList.setTodoDate(info.date);
                     todoList.findTodoList(info.date)
-                    todoList.setFocuse();
                 }
             });
             calendar.render();
@@ -177,6 +176,8 @@
             todoList = $('#todoList').todoList({
                 onItemClick: function(){
                     fileList.findFileList(todoList.getActiveTodoId());
+
+                    setTodoSetting(todoList.getActiveTodo());
                 },
                 onFindTodoList: function(element, data){
                     if(data.length === 0){
@@ -228,10 +229,21 @@
         });
 
         $('#processRange').on('change', function() {
-            console.log('asdf');
+            let beforeProgress = todoList.getActiveTodo().progress;
+
+            ajaxPostRequest('/2do/progress', JSON.stringify({
+                id: todoList.getActiveTodoId(),
+                progress: $('#processRange').val()
+            }), function(data) {
+                console.log(data);
+                todoList.updateActiveProgress(data);
+            }, function(){
+                $('#percent').text(beforeProgress + '%');
+                $('#processRange').val(beforeProgress);
+            });
         });
 
-        $('#processRange').on('input', function(event) {
+        $('#processRange').on('input', function() {
             $('#percent').text(this.value + '%');
         });
 
@@ -289,6 +301,17 @@
             if (holidayTextEl.find('.holiday').length === 0) {
                 holidayTextEl.append("<span class='holiday'>" + item.dateName + "</span>");
             }
+        }
+
+        function setTodoSetting(todo){
+            $('#stateBtnGroup button').each(function(){
+                $(this).removeClass('active');
+            });
+
+            $('#' + todo.state).addClass('active');
+
+            $('#percent').text(Number(todo.progress) + '%');
+            $('#processRange').val(Number(todo.progress));
         }
     </script>
 </th:block>

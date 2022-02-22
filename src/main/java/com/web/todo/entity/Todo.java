@@ -36,4 +36,8 @@ public class Todo {
     public void setTodoUser(long userId){
         this.user = User.builder().id(userId).build();
     }
+
+    public void progressUpdate(int progress){
+        this.progress = progress;
+    }
 }
