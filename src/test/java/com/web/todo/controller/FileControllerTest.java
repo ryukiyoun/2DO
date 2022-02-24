@@ -6,9 +6,9 @@ import com.web.todo.entity.AttachFile;
 import com.web.todo.service.FileFindService;
 import com.web.todo.service.FileSaveService;
 import com.web.todo.service.UserFindService;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
@@ -28,7 +28,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -56,24 +57,33 @@ class FileControllerTest {
     @MockBean
     AuthenticationSuccessHandler customLoginSuccessHandler;
 
+    static AttachFile attachFileFixture1;
+    static AttachFile attachFileFixture2;
+
+    @BeforeAll
+    public static void init(){
+        attachFileFixture1 = AttachFile.builder()
+                .id(1)
+                .originName("han")
+                .managerName("alkdjfalieghl123124")
+                .extension(".txt")
+                .build();
+
+        attachFileFixture2 = AttachFile.builder()
+                .id(2)
+                .originName("excel")
+                .managerName("ahglkcbcxzkljd")
+                .extension(".excel")
+                .build();
+    }
+
     @Test
     void getTodoFiles() throws Exception{
         //given
         List<AttachFile> fixture = new ArrayList<>();
 
-        fixture.add(AttachFile.builder()
-                .id(1)
-                .originName("han")
-                .managerName("alkdjfalieghl123124")
-                .extension(".txt")
-                .build());
-
-        fixture.add(AttachFile.builder()
-                .id(2)
-                .originName("excel")
-                .managerName("ahglkcbcxzkljd")
-                .extension(".excel")
-                .build());
+        fixture.add(attachFileFixture1);
+        fixture.add(attachFileFixture2);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String fixtureJson = objectMapper.writeValueAsString(fixture);
@@ -90,19 +100,12 @@ class FileControllerTest {
     @Test
     void downloadFile() throws Exception {
         //given
-        AttachFile file = AttachFile.builder()
-                .id(1)
-                .originName("han")
-                .managerName("alkdjfalieghl123124")
-                .extension(".txt")
-                .build();
-
         Resource resource = new ByteArrayResource("testFile Contents".getBytes());
 
-        given(fileFindService.findFileById(anyLong())).willReturn(file);
+        given(fileFindService.findFileById(anyLong())).willReturn(attachFileFixture1);
         given(fileFindService.findFile(anyLong(), any(UserDTO.class))).willReturn(resource);
 
-        String fileName = "attachment; fileName=\"" + (URLEncoder.encode(file.getOriginName(), StandardCharsets.UTF_8)+"\"").replace('+', ' ');
+        String fileName = "attachment; fileName=\"" + (URLEncoder.encode(attachFileFixture1.getOriginName(), StandardCharsets.UTF_8)+"\"").replace('+', ' ');
 
         //when, then
         mockMvc.perform(get("/file/download/1"))
