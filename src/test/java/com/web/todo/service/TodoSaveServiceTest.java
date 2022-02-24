@@ -4,6 +4,7 @@ import com.web.todo.dto.UserDTO;
 import com.web.todo.entity.Todo;
 import com.web.todo.entity.User;
 import com.web.todo.repository.TodoRepository;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,54 +28,52 @@ public class TodoSaveServiceTest {
     @InjectMocks
     TodoSaveService todoSaveService;
 
-    @Test
-    public void saveTodo() {
-        //given
-        Todo todo = Todo.builder()
+    static Todo todoFixture;
+
+    @BeforeAll
+    public static void init(){
+        todoFixture = Todo.builder()
                 .id(1)
                 .user(User.builder().id(1).name("user").build())
                 .contents("test contents")
                 .todoDate(LocalDate.now())
                 .progress(50)
                 .build();
+    }
 
-        given(todoRepository.save(any(Todo.class))).willReturn(todo);
+    @Test
+    public void saveTodo() {
+        //given
+        given(todoRepository.save(any(Todo.class))).willReturn(todoFixture);
 
         //when
-        long id = todoSaveService.saveTodo(todo, UserDTO.builder().build());
+        long id = todoSaveService.saveTodo(todoFixture, UserDTO.builder().id(1).build());
 
-        assertThat(id, is(todo.getId()));
+        //then
+        assertThat(id, is(todoFixture.getId()));
     }
 
     @Test
     public void changeProgress() {
         //given
-        Todo todo = Todo.builder()
-                .id(1)
-                .progress(30)
-                .build();
-
-        given(todoRepository.findById(anyLong())).willReturn(Optional.of(todo));
+        given(todoRepository.findById(anyLong())).willReturn(Optional.of(todoFixture));
 
         //when
-        int progress = todoSaveService.changeProgress(todo);
+        int progress = todoSaveService.changeProgress(todoFixture);
 
-        assertThat(progress, is(todo.getProgress()));
+        //then
+        assertThat(progress, is(todoFixture.getProgress()));
     }
 
     @Test
     public void changeProgressEmptyTodo() {
         //given
-        Todo todo = Todo.builder()
-                .id(1)
-                .progress(30)
-                .build();
-
         given(todoRepository.findById(anyLong())).willReturn(Optional.empty());
 
         //when
-        int progress = todoSaveService.changeProgress(todo);
+        int progress = todoSaveService.changeProgress(todoFixture);
 
+        //then
         assertThat(progress, is(0));
     }
 }

@@ -56,7 +56,7 @@ class FileFindServiceTest {
 
         attachFileFix2 = AttachFile.builder()
                 .id(2)
-                .todo(Todo.builder().id(2).user(User.builder().id(1).name("tester").build()).build())
+                .todo(Todo.builder().id(2).user(User.builder().id(2).name("tester").build()).build())
                 .filePath(tempDir.toString())
                 .originName("file2")
                 .managerName("manager2.txt")
@@ -139,7 +139,7 @@ class FileFindServiceTest {
                 .willReturn(Optional.of(attachFileFix2));
 
         //when, then
-        assertThrows(RuntimeException.class, () -> fileFindService.findFile(1, user));
+        assertThrows(RuntimeException.class, () -> fileFindService.findFile(1, UserDTO.builder().id(2).build()));
     }
 
     @Test

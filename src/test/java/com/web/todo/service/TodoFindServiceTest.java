@@ -5,6 +5,7 @@ import com.web.todo.entity.User;
 import com.web.todo.enumable.TodoState;
 import com.web.todo.repository.TodoRepository;
 import com.web.todo.util.date.DateUtil;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,26 +32,35 @@ public class TodoFindServiceTest {
     @InjectMocks
     TodoFindService todoFindService;
 
-    @Test
-    public void findTodoByUserIdAndDate(){
-        //given
-        List<Todo> todoList = new ArrayList<>();
+    static Todo todoFixture1;
+    static Todo todoFixture2;
 
-        todoList.add(Todo.builder()
+    @BeforeAll
+    public static void init(){
+        todoFixture1 = Todo.builder()
                 .user(User.builder().id(1).name("user").build())
                 .contents("is first todo")
                 .state(TodoState.NORMAL)
                 .todoDate(LocalDate.now())
                 .progress(40)
-                .build());
+                .build();
 
-        todoList.add(Todo.builder()
+        todoFixture2 = Todo.builder()
                 .user(User.builder().id(1).name("user").build())
                 .contents("is second todo")
                 .state(TodoState.COMPLETE)
                 .todoDate(LocalDate.now())
                 .progress(100)
-                .build());
+                .build();
+    }
+
+    @Test
+    public void findTodoByUserIdAndDate(){
+        //given
+        List<Todo> todoList = new ArrayList<>();
+
+        todoList.add(todoFixture1);
+        todoList.add(todoFixture2);
 
         given(todoRepository.findAllByUser_IdAndTodoDateOrderByIdDesc(anyLong(), any(LocalDate.class))).willReturn(todoList);
         given(simpleDateUtil.stringToLocalDate(anyString(), anyString())).willReturn(LocalDate.now());

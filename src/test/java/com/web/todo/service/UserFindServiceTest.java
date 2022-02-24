@@ -28,9 +28,9 @@ public class UserFindServiceTest {
 
     @Test
     public void loadUserByUsernameNotNullTest() {
+        //given
         Optional<User> user = Optional.of(User.builder().id(1).name("user").password("pass").build());
 
-        //given
         given(userRepository.findAllByName(anyString())).willReturn(user);
 
         //when

@@ -47,11 +47,11 @@ class FileSaveServiceTest {
     @InjectMocks
     FileSaveService fileSaveService;
 
+    MockMultipartFile file1 = new MockMultipartFile("files", "filename-1.txt", "text/plain", "test file".getBytes());
+
     @Test
     void saveTodoFiles() {
         //given
-        MockMultipartFile file1 = new MockMultipartFile("files", "filename-1.txt", "text/plain", "test file".getBytes());
-
         given(stringUniqueIdUtil.getUniqueId()).willReturn("testFileUnique");
         given(simpleSaveFileUtil.getDirPath()).willReturn(Path.of("./testDirectory"));
 
@@ -66,8 +66,6 @@ class FileSaveServiceTest {
     @Test
     void saveTodoFilesThrow() throws IOException{
         //given
-        MockMultipartFile file1 = new MockMultipartFile("files", "filename-1.txt", "text/plain", "test file".getBytes());
-
         given(simpleSaveFileUtil.getDirPath()).willReturn(Path.of("./testDirectory"));
         given(simpleSaveFileUtil.uploadFile(any(Path.class), anyString(), any(MultipartFile.class))).willThrow(new IOException("file save error"));
 
