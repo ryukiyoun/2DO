@@ -1,5 +1,6 @@
 package com.web.todo.service;
 
+import com.web.todo.dto.UserDTO;
 import com.web.todo.entity.AttachFile;
 import com.web.todo.repository.FileRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,19 +32,21 @@ public class FileFindService {
             throw new RuntimeException("not found AttachFile");
     }
 
-    public Resource findFile(long attachId){
+    public Resource findFile(long attachId, UserDTO user){
         try {
             AttachFile attachFile = fileRepository.findById(attachId).orElse(null);
 
             if(attachFile != null) {
+                if(attachFile.getTodo().getUser().getId() != user.getId())
+                    throw new RuntimeException("Not Available File");
+
                 File file = new File(attachFile.getFilePath() + File.separator + attachFile.getManagerName());
                 Path path = Paths.get(file.getAbsolutePath());
 
                 return new ByteArrayResource(Files.readAllBytes(path));
             }
-            else{
+            else
                 throw new RuntimeException("not found file");
-            }
         }
         catch (IOException ioException){
             throw new RuntimeException("file download error", ioException);

@@ -1,5 +1,6 @@
 package com.web.todo.controller;
 
+import com.web.todo.dto.UserDTO;
 import com.web.todo.entity.AttachFile;
 import com.web.todo.service.FileFindService;
 import com.web.todo.service.FileSaveService;
@@ -8,6 +9,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,7 +30,7 @@ public class FileController {
     }
 
     @GetMapping("/file/download/{attachId}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable long attachId){
+    public ResponseEntity<Resource> downloadFile(@PathVariable long attachId, @AuthenticationPrincipal UserDTO user){
         HttpHeaders header = new HttpHeaders();
 
         header.add(HttpHeaders.CONTENT_DISPOSITION,
@@ -40,7 +42,7 @@ public class FileController {
         return ResponseEntity.ok()
                 .headers(header)
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(fileFindService.findFile(attachId));
+                .body(fileFindService.findFile(attachId, user));
     }
 
     @PostMapping("/files/{todoId}")

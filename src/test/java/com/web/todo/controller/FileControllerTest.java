@@ -1,6 +1,7 @@
 package com.web.todo.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.web.todo.dto.UserDTO;
 import com.web.todo.entity.AttachFile;
 import com.web.todo.service.FileFindService;
 import com.web.todo.service.FileSaveService;
@@ -27,8 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -100,7 +100,7 @@ class FileControllerTest {
         Resource resource = new ByteArrayResource("testFile Contents".getBytes());
 
         given(fileFindService.findFileById(anyLong())).willReturn(file);
-        given(fileFindService.findFile(anyLong())).willReturn(resource);
+        given(fileFindService.findFile(anyLong(), any(UserDTO.class))).willReturn(resource);
 
         String fileName = "attachment; fileName=\"" + (URLEncoder.encode(file.getOriginName(), StandardCharsets.UTF_8)+"\"").replace('+', ' ');
 
