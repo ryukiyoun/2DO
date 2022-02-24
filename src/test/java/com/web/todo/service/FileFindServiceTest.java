@@ -5,22 +5,16 @@ import com.web.todo.entity.AttachFile;
 import com.web.todo.entity.Todo;
 import com.web.todo.entity.User;
 import com.web.todo.repository.FileRepository;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -28,16 +22,15 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FileFindServiceTest {
     @TempDir
-    Path tempDir;
+    static Path tempDir;
 
     @Mock
     FileRepository fileRepository;
@@ -45,58 +38,63 @@ class FileFindServiceTest {
     @InjectMocks
     FileFindService fileFindService;
 
+    static AttachFile attachFileFix1;
+    static AttachFile attachFileFix2;
+
+    static UserDTO user;
+
+    @BeforeAll
+    public static void init(){
+        attachFileFix1 = AttachFile.builder()
+                .id(1)
+                .todo(Todo.builder().id(1).user(User.builder().id(1).name("tester").build()).build())
+                .filePath(tempDir.toString())
+                .originName("file1")
+                .managerName("manager1.txt")
+                .extension("txt")
+                .build();
+
+        attachFileFix2 = AttachFile.builder()
+                .id(2)
+                .todo(Todo.builder().id(2).user(User.builder().id(1).name("tester").build()).build())
+                .filePath(tempDir.toString())
+                .originName("file2")
+                .managerName("manager2.txt")
+                .extension("txt")
+                .build();
+
+        user = UserDTO.builder().id(1).name("tester").build();
+    }
+
     @Test
     void findFileByTodoId() {
         //given
-        List<AttachFile> fixture = new ArrayList<>();
+        List<AttachFile> list = new ArrayList<>();
 
-        fixture.add(AttachFile.builder()
-                .id(1)
-                .todo(Todo.builder().id(1).build())
-                .originName("file1")
-                .managerName("manager1")
-                .extension("txt")
-                .filePath("test/dir")
-                .build());
+        list.add(attachFileFix1);
+        list.add(attachFileFix2);
 
-        fixture.add(AttachFile.builder()
-                .id(2)
-                .todo(Todo.builder().id(1).build())
-                .originName("file2")
-                .managerName("manager2")
-                .extension("txt")
-                .filePath("test/dir")
-                .build());
-
-        given(fileRepository.findAllByTodo_Id(anyLong())).willReturn(fixture);
+        given(fileRepository.findAllByTodo_Id(anyLong())).willReturn(list);
 
         //when
         List<AttachFile> result = fileFindService.findFileByTodoId(1);
 
         //then
         assertThat(result.size(), is(2));
-        checkTodoResult(result.get(0), fixture.get(0));
-        checkTodoResult(result.get(1), fixture.get(1));
+        checkTodoResult(result.get(0), list.get(0));
+        checkTodoResult(result.get(1), list.get(1));
     }
 
     @Test
     public void findFileById(){
         //given
-        AttachFile file = AttachFile.builder()
-                .id(1)
-                .todo(Todo.builder().id(1).build())
-                .originName("file1")
-                .managerName("manager1")
-                .extension("txt")
-                .filePath("test/dir")
-                .build();
-
-        given(fileRepository.findById(anyLong())).willReturn(Optional.of(file));
+        given(fileRepository.findById(anyLong())).willReturn(Optional.of(attachFileFix1));
 
         //when
         AttachFile result = fileFindService.findFileById(1);
 
-        assertThat(result, is(file));
+        //then
+        assertThat(result, is(attachFileFix1));
     }
 
     @Test
@@ -111,76 +109,46 @@ class FileFindServiceTest {
     @Test
     public void findFile() throws Exception{
         //given
-        AttachFile attachFile = AttachFile.builder()
-                .id(1)
-                .filePath(tempDir.toString())
-                .managerName("manager.txt")
-                .originName("test.txt")
-                .extension(".txt")
-                .todo(Todo.builder().user(User.builder().id(1).name("tester").build()).build())
-                .build();
-
-        UserDTO user = UserDTO.builder().id(1).name("tester").build();
-
-        Path file = Files.createFile(tempDir.resolve("manager.txt"));
+        Path file = Files.createFile(tempDir.resolve("manager1.txt"));
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(file));
 
         given(fileRepository.findById(anyLong()))
-                .willReturn(Optional.of(attachFile));
+                .willReturn(Optional.of(attachFileFix1));
 
+        //when
         Resource result = fileFindService.findFile(1, user);
 
+        //then
         assertThat(result, is(resource));
     }
 
     @Test
-    public void findFileEmptyFile() throws Exception{
+    public void findFileEmptyFile(){
         //given
         given(fileRepository.findById(anyLong()))
                 .willReturn(Optional.empty());
 
-        UserDTO user = UserDTO.builder().id(1).name("tester").build();
-
+        //when, then
         assertThrows(RuntimeException.class, () -> fileFindService.findFile(1, user));
     }
 
     @Test
-    public void findFileIOException() throws Exception{
+    public void findFileIOException(){
         //given
-        AttachFile attachFile = AttachFile.builder()
-                .id(1)
-                .filePath(tempDir.toString())
-                .managerName("manager.txt")
-                .originName("test.txt")
-                .extension(".txt")
-                .todo(Todo.builder().user(User.builder().id(1).name("tester").build()).build())
-                .build();
-
-        UserDTO user = UserDTO.builder().id(1).name("tester").build();
-
         given(fileRepository.findById(anyLong()))
-                .willReturn(Optional.of(attachFile));
+                .willReturn(Optional.of(attachFileFix2));
 
+        //when, then
         assertThrows(RuntimeException.class, () -> fileFindService.findFile(1, user));
     }
 
     @Test
-    public void findFileNotAvailableUserException() throws Exception{
+    public void findFileNotAvailableUserException(){
         //given
-        AttachFile attachFile = AttachFile.builder()
-                .id(1)
-                .filePath(tempDir.toString())
-                .managerName("manager.txt")
-                .originName("test.txt")
-                .extension(".txt")
-                .todo(Todo.builder().user(User.builder().id(2).name("tester").build()).build())
-                .build();
-
-        UserDTO user = UserDTO.builder().id(1).name("tester").build();
-
         given(fileRepository.findById(anyLong()))
-                .willReturn(Optional.of(attachFile));
+                .willReturn(Optional.of(attachFileFix2));
 
+        //when, then
         assertThrows(RuntimeException.class, () -> fileFindService.findFile(1, user));
     }
 
