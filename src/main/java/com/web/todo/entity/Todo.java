@@ -40,4 +40,8 @@ public class Todo {
     public void progressUpdate(int progress){
         this.progress = progress;
     }
+
+    public void stateUpdate(TodoState state){
+        this.state = state;
+    }
 }

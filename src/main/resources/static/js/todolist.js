@@ -254,7 +254,7 @@
 
         getActiveTodo(){
             return {
-                todoId: $('.list-group-item.active').data('todoId'),
+                id: $('.list-group-item.active').data('todoId'),
                 state: $('.list-group-item.active').data('state'),
                 progress: $('.list-group-item.active').data('progress'),
             };
@@ -262,6 +262,10 @@
 
         updateActiveProgress(progress){
             $('.list-group-item.active').data('progress', progress);
+        },
+
+        updateActiveState(state){
+            $('.list-group-item.active').data('state', state);
         },
 
         setTodoDate(date){

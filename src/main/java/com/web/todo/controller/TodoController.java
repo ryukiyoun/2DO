@@ -1,7 +1,9 @@
 package com.web.todo.controller;
 
+import com.web.todo.dto.TodoDTO;
 import com.web.todo.dto.UserDTO;
 import com.web.todo.entity.Todo;
+import com.web.todo.enumable.TodoState;
 import com.web.todo.service.TodoFindService;
 import com.web.todo.service.TodoSaveService;
 import lombok.RequiredArgsConstructor;
@@ -45,5 +47,10 @@ public class TodoController {
     @PostMapping("/2do/progress")
     public ResponseEntity<Integer> changeProgress(@RequestBody Todo todo){
         return ResponseEntity.ok().body(todoSaveService.changeProgress(todo));
+    }
+
+    @PostMapping("/2do/state")
+    public ResponseEntity<TodoState> changeState(@RequestBody Todo todo){
+        return ResponseEntity.ok().body(todoSaveService.changeState(todo));
     }
 }
