@@ -19,7 +19,11 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -63,6 +67,16 @@ class TodoControllerTest {
 
     @Test
     public void findTodos() throws Exception{
+        //given
+        List<Todo> todoListFixture = new ArrayList<>();
+        todoListFixture.add(Todo.builder()
+                .id(1)
+                .contents("test")
+                .state(TodoState.NORMAL)
+                .todoDate(LocalDate.now()).build());
+
+        given(todoFindService.findTodoByUserIdAndDate(anyLong(), anyString())).willReturn(todoListFixture);
+
         //when then
         mockMvc.perform(get("/2do/20220119")
                 .with(user(UserDTO.builder()
@@ -70,6 +84,7 @@ class TodoControllerTest {
                         .name("user")
                         .password("pass").build())))
                 .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(todoListFixture)))
                 .andDo(print());
     }
 
@@ -78,7 +93,7 @@ class TodoControllerTest {
         //given
         String content = objectMapper.writeValueAsString(Todo.builder().contents("test").state(TodoState.NORMAL).build());
 
-        given(todoSaveService.saveTodo(any(Todo.class), any(UserDTO.class))).willReturn(1L);
+        given(todoSaveService.saveTodo(any(Todo.class), any(UserDTO.class))).willReturn(5L);
 
         //when then
         mockMvc.perform(post("/2do")
@@ -90,7 +105,7 @@ class TodoControllerTest {
                         .name("user")
                         .password("pass").build())))
                 .andExpect(status().isOk())
-                .andExpect(content().string("1"))
+                .andExpect(content().string("5"))
                 .andDo(print());
     }
 
@@ -100,6 +115,7 @@ class TodoControllerTest {
         String content = objectMapper.writeValueAsString(Todo.builder().id(1).progress(15).build());
 
         given(todoSaveService.changeProgress(any(Todo.class))).willReturn(15);
+
         //when then
         mockMvc.perform(post("/2do/progress")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -107,6 +123,23 @@ class TodoControllerTest {
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().string("15"))
+                .andDo(print());
+    }
+
+    @Test
+    public void changeState() throws Exception{
+        //given
+        String content = objectMapper.writeValueAsString(Todo.builder().id(1).state(TodoState.NORMAL).build());
+
+        given(todoSaveService.changeState(any(Todo.class))).willReturn(TodoState.COMPLETE);
+
+        //when then
+        mockMvc.perform(post("/2do/state")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(content)
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(objectMapper.writeValueAsString(TodoState.COMPLETE)))
                 .andDo(print());
     }
 }
