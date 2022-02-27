@@ -22,16 +22,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -108,13 +110,18 @@ class FileControllerTest {
         String fileName = "attachment; fileName=\"" + (URLEncoder.encode(attachFileFixture1.getOriginName(), StandardCharsets.UTF_8)+"\"").replace('+', ' ');
 
         //when, then
-        mockMvc.perform(get("/file/download/1"))
+        mockMvc.perform(get("/file/download/1")
+                .with(user(UserDTO.builder()
+                        .id(1)
+                        .name("user")
+                        .password("pass").build())))
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, fileName))
                 .andExpect(header().string(HttpHeaders.PRAGMA, "no-cache"))
                 .andExpect(header().string(HttpHeaders.EXPIRES, "0"))
                 .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate"))
                 .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
+                .andExpect(content().bytes("testFile Contents".getBytes()))
                 .andDo(print());
     }
 
@@ -123,16 +130,22 @@ class FileControllerTest {
         //given
         MockMultipartFile file1 = new MockMultipartFile("filepond", "filename-1.txt", "text/plain", "1".getBytes());
 
+        given(fileSaveService.saveTodoFiles(anyLong(), any(MultipartFile[].class))).willReturn("manage file string");
+
         //when then
         mockMvc.perform(multipart("/files/1")
                 .file(file1)
                 .with(csrf()))
                 .andExpect(status().isOk())
+                .andExpect(content().string("manage file string"))
                 .andDo(print());
     }
 
     @Test
     void removeFile() throws Exception{
+        //given
+        doNothing().when(fileSaveService).removeFile(anyString());
+
         //when then
         mockMvc.perform(delete("/file/remove/testfile")
                 .with(csrf()))
