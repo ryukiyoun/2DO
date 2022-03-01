@@ -70,6 +70,10 @@
         .custom-range::-webkit-slider-thumb:active {
             background-color: #575757;
         }
+
+        .state-complete{
+            color: green;
+        }
     </style>
 </head>
 
@@ -182,6 +186,7 @@
                 onFindTodoList: function(element, data){
                     if(data.length === 0){
                         fileList.setEmpty();
+                        setTodoSetting({state:null, progress:0})
                     }
                 }
             });
@@ -229,36 +234,40 @@
         });
 
         $(document).on('click', '.btn-state', function () {
-            let button = $(this);
+            if(todoList.getActiveTodoId() !== undefined) {
+                let button = $(this);
 
-            if(!button.hasClass('active')){
-                let todo = todoList.getActiveTodo();
-                todo.state = button.attr('id');
+                if (!button.hasClass('active')) {
+                    let todo = todoList.getActiveTodo();
+                    todo.state = button.attr('id');
 
-                ajaxPostRequest('/2do/state', JSON.stringify(todo), function(data){
-                    $('#stateBtnGroup button').each(function(){
-                        $(this).removeClass('active');
-                    });
+                    ajaxPostRequest('/2do/state', JSON.stringify(todo), function (data) {
+                        $('#stateBtnGroup button').each(function () {
+                            $(this).removeClass('active');
+                        });
 
-                    todoList.updateActiveState(data);
+                        todoList.updateActiveState(data);
 
-                    button.addClass('active');
-                }, null);
+                        button.addClass('active');
+                    }, null);
+                }
             }
         });
 
         $('#processRange').on('change', function() {
-            let beforeProgress = todoList.getActiveTodo().progress;
+            if(todoList.getActiveTodoId() !== undefined) {
+                let beforeProgress = todoList.getActiveTodo().progress;
 
-            ajaxPostRequest('/2do/progress', JSON.stringify({
-                id: todoList.getActiveTodoId(),
-                progress: $('#processRange').val()
-            }), function(data) {
-                todoList.updateActiveProgress(data);
-            }, function(){
-                $('#percent').text(beforeProgress + '%');
-                $('#processRange').val(beforeProgress);
-            });
+                ajaxPostRequest('/2do/progress', JSON.stringify({
+                    id: todoList.getActiveTodoId(),
+                    progress: $('#processRange').val()
+                }), function (data) {
+                    todoList.updateActiveProgress(data);
+                }, function () {
+                    $('#percent').text(beforeProgress + '%');
+                    $('#processRange').val(beforeProgress);
+                });
+            }
         });
 
         $('#processRange').on('input', function() {
