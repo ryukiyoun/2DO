@@ -140,10 +140,28 @@
                             style: 'cursor: pointer'
                         });
 
-                        let p = $('<p/>', {
-                            text: item.contents,
-                            class: 'm-0'
-                        });
+                        let text;
+
+                        switch (item.state){
+                            case 'NORMAL':
+                                text = $('<p/>', {
+                                    text: item.contents,
+                                    class: 'm-0'
+                                });
+                                break;
+                            case 'CANCEL' :
+                                text = $('<s/>', {
+                                    text: item.contents,
+                                    class: 'm-0'
+                                });
+                                break;
+                            case 'COMPLETE' :
+                                text = $('<p/>', {
+                                    text: item.contents,
+                                    class: 'm-0 state-complete'
+                                });
+                                break;
+                        }
 
                         let termDiv = $('<div/>', {
                             class: 'm-auto'
@@ -174,49 +192,7 @@
 
                         normalBtn.append(normalSVG);
 
-                        let cancelBtn = $('<button/>', {
-                            class: 'btn btn-outline-secondary mr-2'
-                        });
-
-                        let cancelSVG = $('<svg/>', {
-                            xmlns: 'http://www.w3.org/2000/svg',
-                            width: '16',
-                            height: '16',
-                            fill: 'currentColor',
-                            class: 'bi bi-bookmark',
-                            viewBox: '0 0 16 16'
-                        });
-
-                        let cancelPath = $('<path/>', {
-                            d: 'M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z'
-                        });
-
-                        cancelSVG.append(cancelPath);
-
-                        cancelBtn.append(cancelSVG);
-
-                        let completeBtn = $('<button/>', {
-                            class: 'btn btn-outline-secondary'
-                        });
-
-                        let completeSVG = $('<svg/>', {
-                            xmlns: 'http://www.w3.org/2000/svg',
-                            width: '16',
-                            height: '16',
-                            fill: 'currentColor',
-                            class: 'bi bi-bookmark',
-                            viewBox: '0 0 16 16'
-                        });
-
-                        let completePath = $('<path/>', {
-                            d: 'M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z'
-                        });
-
-                        completeSVG.append(completePath);
-
-                        completeBtn.append(completeSVG);
-
-                        liItem.append(p);
+                        liItem.append(text);
 
                         liItem.append(termDiv);
 
@@ -265,7 +241,20 @@
         },
 
         updateActiveState(state){
+            console.log(state);
             $('.list-group-item.active').data('state', state);
+            console.log($('.list-group-item.active').children());
+            switch (state){
+                case 'NORMAL' :
+                    $($('.list-group-item.active').children()[0]).contents().unwrap().wrap('<p class="mb-0"></p>');
+                    break;
+                case 'CANCEL' :
+                    $($('.list-group-item.active').children()[0]).contents().unwrap().wrap('<s></s>');
+                    break;
+                case 'COMPLETE' :
+                    $($('.list-group-item.active').children()[0]).contents().unwrap().wrap('<p class="mb-0 state-complete"></p>');
+                    break;
+            }
         },
 
         setTodoDate(date){
