@@ -1,6 +1,5 @@
 package com.web.todo.controller;
 
-import com.web.todo.dto.TodoDTO;
 import com.web.todo.dto.UserDTO;
 import com.web.todo.entity.Todo;
 import com.web.todo.enumable.TodoState;
