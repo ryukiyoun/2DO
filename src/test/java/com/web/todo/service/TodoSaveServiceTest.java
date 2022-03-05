@@ -3,6 +3,7 @@ package com.web.todo.service;
 import com.web.todo.dto.UserDTO;
 import com.web.todo.entity.Todo;
 import com.web.todo.entity.User;
+import com.web.todo.enumable.TodoState;
 import com.web.todo.repository.TodoRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
@@ -59,10 +61,10 @@ public class TodoSaveServiceTest {
         given(todoRepository.findById(anyLong())).willReturn(Optional.of(todoFixture));
 
         //when
-        int progress = todoSaveService.changeProgress(todoFixture);
+        int progress = todoSaveService.changeProgress(Todo.builder().id(1).progress(58).build());
 
         //then
-        assertThat(progress, is(todoFixture.getProgress()));
+        assertThat(progress, is(58));
     }
 
     @Test
@@ -71,9 +73,33 @@ public class TodoSaveServiceTest {
         given(todoRepository.findById(anyLong())).willReturn(Optional.empty());
 
         //when
-        int progress = todoSaveService.changeProgress(todoFixture);
+        int progress = todoSaveService.changeProgress(Todo.builder().id(100).progress(52).build());
 
         //then
         assertThat(progress, is(0));
+    }
+
+    @Test
+    public void changeState() {
+        //given
+        given(todoRepository.findById(anyLong())).willReturn(Optional.of(todoFixture));
+
+        //when
+        TodoState state = todoSaveService.changeState(Todo.builder().id(1).state(TodoState.COMPLETE).build());
+
+        //then
+        assertThat(state, is(TodoState.COMPLETE));
+    }
+
+    @Test
+    public void changeStateEmptyTodo() {
+        //given
+        given(todoRepository.findById(anyLong())).willReturn(Optional.empty());
+
+        //when
+        TodoState state = todoSaveService.changeState(Todo.builder().id(100).state(TodoState.COMPLETE).build());
+
+        //then
+        assertThat(state, is(nullValue()));
     }
 }
